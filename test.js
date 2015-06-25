@@ -14,6 +14,11 @@ var checkAuthInterval = setInterval( function() {
 }, 2000 );
 
 Soundslice.ready( function() {
-  console.log( '* ready event: ', Soundslice );
-  console.log( '* trying to upload a notation', Soundslice.uploadNotation );
+  console.log( '* ready (callback)!' );
+  console.log( '* trying to upload a notation' );
+  Soundslice.uploadNotation({
+    name: 'notation uploaded from node!',
+    artist: 'eric clapton',
+    filePath: 'sample.gp4'
+  });
 });
