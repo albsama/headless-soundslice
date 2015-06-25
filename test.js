@@ -14,13 +14,25 @@ var checkAuthInterval = setInterval( function() {
 }, 2000 );
 
 Soundslice.ready( function() {
+
   console.log( '* ready (callback)!' );
   console.log( '* trying to upload a notation' );
+
   Soundslice.uploadNotation({
     name: 'notation uploaded from node!',
     artist: 'eric clapton',
     filePath: 'sample.gp4'
-  }, function( score ) {
-    console.log( '* finishCallback!', score );
+
+  }, function( notationId ) {
+
+    console.log( '' );
+    console.log( '* finishCallback! got notation id #', notationId );
+    console.log( '' );
+
+    Soundslice.embed( notationId, 640, 480, function( html ) {
+      console.log( '* HTML/Embed code:', html );
+      process.exit();
+    });
+
   });
 });
