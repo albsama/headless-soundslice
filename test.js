@@ -20,5 +20,7 @@ Soundslice.ready( function() {
     name: 'notation uploaded from node!',
     artist: 'eric clapton',
     filePath: 'sample.gp4'
+  }, function( score ) {
+    console.log( '* finishCallback!', score );
   });
 });
