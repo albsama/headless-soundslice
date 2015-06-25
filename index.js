@@ -1,6 +1,8 @@
 const Browser = require( 'zombie' ),
       browser = new Browser();
 
+var querystring = require('querystring');
+
 function soundslice( email, password ) {
   console.log( 'soundslice: init/auth' );
 
@@ -24,8 +26,20 @@ function soundslice( email, password ) {
   });
 };
 
-soundslice.prototype.uploadNotation = function() {
-  console.log( 'soundslice: uploadNotation' );
+soundslice.prototype.uploadNotation = function( options ) {
+  console.log( 'soundslice: uploadNotation', options );
+  browser.visit( 'https://www.soundslice.com/manage/create-score/', function() {
+    console.log( 'soundslice: entering details' );
+    browser.fill( 'name', options.name )
+           .fill( 'artist', options.artist )
+           .pressButton( 'Save', function() {
+             console.log( 'soundslice: details saved (step 1 of 2)' );
+             var lookupUrl = 'https://www.soundslice.com/manage/?' + querystring.stringify( { q: options.name + ' ' + options.artist } );
+             console.log( lookupUrl );
+             browser.visit( lookupUrl, function() {
+             });
+           });
+  });
 };
 
 soundslice.prototype.ready = function( f ) {
