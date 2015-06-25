@@ -26,7 +26,7 @@ function soundslice( email, password ) {
   });
 };
 
-soundslice.prototype.uploadNotation = function( options ) {
+soundslice.prototype.uploadNotation = function( options, finishCallback ) {
   console.log( 'soundslice: uploadNotation', options );
   browser.visit( 'https://www.soundslice.com/manage/create-score/', function() {
     console.log( 'soundslice: entering details' );
@@ -35,8 +35,16 @@ soundslice.prototype.uploadNotation = function( options ) {
            .pressButton( 'Save', function() {
              console.log( 'soundslice: details saved (step 1 of 2)' );
              var lookupUrl = 'https://www.soundslice.com/manage/?' + querystring.stringify( { q: options.name + ' ' + options.artist } );
-             console.log( lookupUrl );
              browser.visit( lookupUrl, function() {
+               browser.clickLink( 'Upload notation', function() {
+                 console.log( 'soundslice: starting upload (step 2 of 2)' );
+                 browser.attach( 'score', 'sample.gp4' );
+                 browser.pressButton( 'Start the upload', function( err ) {
+                   console.log( 'soundslice: upload ok (step 2 of 2)' );
+                   console.log( browser.location );
+                   finishCallback(null);
+                 });
+               });
              });
            });
   });
