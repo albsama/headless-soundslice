@@ -1,7 +1,8 @@
 const Browser = require( 'zombie' ),
       browser = new Browser();
 
-var querystring = require('querystring');
+var querystring = require('querystring'),
+    ejs = require('ejs');
 
 function soundslice( email, password ) {
   console.log( 'soundslice: init/auth' );
@@ -26,23 +27,50 @@ function soundslice( email, password ) {
   });
 };
 
+soundslice.prototype.embed = function( notationId, width, height, callback ) {
+  var embedTemplate = '<iframe src="https://www.soundslice.com/scores/<%= id %>/" width="<%= width %>" height="<%= height %>" frameBorder="0" allowfullscreen></iframe>';
+  callback( ejs.render( embedTemplate, { id: notationId, width: width, height: height} ) );
+};
+
+soundslice.prototype.getNotationId = function( url ) {
+  var r = /manage\/(.*)\/notation/,
+      matches  = url.match( r );
+  if( matches == null ) {
+    return -1;
+  } else {
+    return parseInt( matches[1] );
+  };
+};
+
 soundslice.prototype.uploadNotation = function( options, finishCallback ) {
+
+  var self = this;
+
   console.log( 'soundslice: uploadNotation', options );
+
   browser.visit( 'https://www.soundslice.com/manage/create-score/', function() {
     console.log( 'soundslice: entering details' );
+
     browser.fill( 'name', options.name )
            .fill( 'artist', options.artist )
            .pressButton( 'Save', function() {
+
              console.log( 'soundslice: details saved (step 1 of 2)' );
+
              var lookupUrl = 'https://www.soundslice.com/manage/?' + querystring.stringify( { q: options.name + ' ' + options.artist } );
              browser.visit( lookupUrl, function() {
+
                browser.clickLink( 'Upload notation', function() {
+
                  console.log( 'soundslice: starting upload (step 2 of 2)' );
+
+                 options.notationId = self.getNotationId( browser.location.href );
+
                  browser.attach( 'score', 'sample.gp4' );
                  browser.pressButton( 'Start the upload', function( err ) {
+
                    console.log( 'soundslice: upload ok (step 2 of 2)' );
-                   console.log( browser.location );
-                   finishCallback(null);
+                   finishCallback(options.notationId);
                  });
                });
              });
