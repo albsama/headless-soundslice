@@ -13,7 +13,8 @@ Soundslice.ready( function() {
   });*/
 
   Soundslice.sync( null, function() {
-    
+    console.log( 'el callback!' );
+    console.log( 'scores', Soundslice.scores );
   });
 
 });
