@@ -3,7 +3,8 @@ const Browser = require( 'zombie' ),
 
 var querystring = require('querystring'),
     ejs = require('ejs'),
-    cheerio = require( 'cheerio' );
+    cheerio = require( 'cheerio' ),
+    fs = require( 'fs' );
 
 function soundslice( email, password ) {
   console.log( 'soundslice: init/auth' );
@@ -12,6 +13,7 @@ function soundslice( email, password ) {
 
   this.authenticated = false;
   this.readyEvent = function() {};
+  this.scores = {};
 
   browser.visit( 'https://www.soundslice.com/login/', function() {
     browser.fill( 'email', email )
@@ -26,6 +28,45 @@ function soundslice( email, password ) {
       };
     })
   });
+
+  this.sync = function( next, callback ) {
+    var results = [],
+        scoresUrl = 'https://www.soundslice.com/manage/?start=',
+        self = this;
+
+    if( next ) {
+      scoresUrl = scoresUrl + next;
+    };
+
+    console.log( 'soundslice.sync, next =>', next, 'callback =>', callback, 'url', scoresUrl );
+
+        //console.log(1,browser.resources[0].response.body);
+    browser.visit( scoresUrl, function() {
+      // console.log( 'browser.visit' ); console.log( 'browser', this.resources );
+      //var mainResource = this.resources[ 0 ];
+      //console.log( this.resources[0].response );
+      // console.log(1,browser.resources[0].response.body);
+      var $ = cheerio.load( browser.resources[0].response.body );
+      console.log( 'scores!', $( '.score-listing' ).length );
+
+      // next page
+      if( $( '.searchnav' ).text().indexOf( 'Next' ) > -1 ) {
+        console.log( 'next page!');
+        var nextParam = $( '.searchnav a.pull-right').attr( 'href' ).split( 'start=' )[1];
+        self.sync( nextParam, callback );
+        console.log( 'results', results );
+        console.log( 'self', self );
+        //console.log( 'this', this );
+        console.log( '' );
+      } else {
+        console.log( 'finish!');
+        callback();
+      };
+    });
+
+      // console.log( 'texto', $( '.searchnav' ).text() );
+      // callback( results );
+    };
 };
 
 soundslice.prototype.embed = function( notationId, width, height, callback ) {
@@ -79,21 +120,7 @@ soundslice.prototype.uploadNotation = function( options, finishCallback ) {
   });
 };
 
-soundslice.prototype.search = function( query, callback ) {
-  var results = [],
-      scoresUrl = 'https://www.soundslice.com/manage/';
 
-      console.log(1,browser.resources[0].response.body);
-  browser.visit( scoresUrl, function( browser, request, response ) {
-    // console.log( 'browser.visit' ); console.log( 'browser', this.resources );
-    //var mainResource = this.resources[ 0 ];
-    //console.log( this.resources[0].response );
-    callback( results );
-  });
-
-
-  // callback( results );
-};
 
 soundslice.prototype.ready = function( f ) {
   this.readyEvent = f;
