@@ -2,7 +2,8 @@ const Browser = require( 'zombie' ),
       browser = new Browser();
 
 var querystring = require('querystring'),
-    ejs = require('ejs');
+    ejs = require('ejs'),
+    cheerio = require( 'cheerio' );
 
 function soundslice( email, password ) {
   console.log( 'soundslice: init/auth' );
@@ -79,9 +80,19 @@ soundslice.prototype.uploadNotation = function( options, finishCallback ) {
 };
 
 soundslice.prototype.search = function( query, callback ) {
-  var results = [];
-  console.log( 'soundslice.search', query );
-  callback( results );
+  var results = [],
+      scoresUrl = 'https://www.soundslice.com/manage/';
+
+      console.log(1,browser.resources[0].response.body);
+  browser.visit( scoresUrl, function( browser, request, response ) {
+    // console.log( 'browser.visit' ); console.log( 'browser', this.resources );
+    //var mainResource = this.resources[ 0 ];
+    //console.log( this.resources[0].response );
+    callback( results );
+  });
+
+
+  // callback( results );
 };
 
 soundslice.prototype.ready = function( f ) {
