@@ -4,7 +4,8 @@ const Browser = require( 'zombie' ),
 var querystring = require('querystring'),
     ejs = require('ejs'),
     cheerio = require( 'cheerio' ),
-    fs = require( 'fs' );
+    fs = require( 'fs' ),
+    async = require( 'async' );
 
 function soundslice( email, password ) {
   console.log( 'soundslice: init/auth' );
@@ -31,42 +32,45 @@ function soundslice( email, password ) {
 
   this.sync = function( next, callback ) {
     var results = [],
-        scoresUrl = 'https://www.soundslice.com/manage/?start=',
-        self = this;
+    scoresUrl = 'https://www.soundslice.com/manage/?start=',
+    self = this;
 
     if( next ) {
       scoresUrl = scoresUrl + next;
     };
 
-    console.log( 'soundslice.sync, next =>', next, 'callback =>', callback, 'url', scoresUrl );
-
-        //console.log(1,browser.resources[0].response.body);
     browser.visit( scoresUrl, function() {
-      // console.log( 'browser.visit' ); console.log( 'browser', this.resources );
-      //var mainResource = this.resources[ 0 ];
-      //console.log( this.resources[0].response );
-      // console.log(1,browser.resources[0].response.body);
-      var $ = cheerio.load( browser.resources[0].response.body );
+
+      var $ = cheerio.load( browser.resources[0].response.body ),
+      scoreElements = $( '.score-listing' );
       console.log( 'scores!', $( '.score-listing' ).length );
 
-      // next page
-      if( $( '.searchnav' ).text().indexOf( 'Next' ) > -1 ) {
-        console.log( 'next page!');
-        var nextParam = $( '.searchnav a.pull-right').attr( 'href' ).split( 'start=' )[1];
-        self.sync( nextParam, callback );
-        console.log( 'results', results );
-        console.log( 'self', self );
-        //console.log( 'this', this );
-        console.log( '' );
-      } else {
-        console.log( 'finish!');
-        callback();
-      };
-    });
+      async.each( scoreElements, function( e, callback ) {
+          // console.log( 'score element', $(e).text() );
 
-      // console.log( 'texto', $( '.searchnav' ).text() );
-      // callback( results );
-    };
+          var score = {};
+          score.anchor = $(e).find( '.score-link' );
+          score.href = score.anchor.attr( 'href' );
+          score.id = score.href.split( '/' )[2];
+          score.title = $( score.anchor.find( 'strong' ) ).text();
+
+          delete( score.anchor );
+
+          console.log( score );
+
+          callback();
+          
+      }, function() {
+        if( $( '.searchnav' ).text().indexOf( 'Next' ) > -1 ) {
+          var nextParam = $( '.searchnav a.pull-right').attr( 'href' ).split( 'start=' )[1];
+          self.sync( nextParam, callback );
+        } else {
+          console.log( 'finish!');
+          callback();
+        };
+      });
+    });
+  };
 };
 
 soundslice.prototype.embed = function( notationId, width, height, callback ) {
