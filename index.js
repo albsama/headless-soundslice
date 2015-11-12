@@ -14,16 +14,16 @@ function soundslice( email, password ) {
 
   browser.visit( 'https://www.soundslice.com/login/', function() {
     browser.fill( 'email', email )
-           .fill( 'password', password )
-           .pressButton( 'Log in', function() {
-             if( browser.text( 'title' ).indexOf( 'Log in' ) == -1 ) {
-               console.log( 'soundslice: auth ok' );
-               self.authenticated = true;
-               self.readyEvent();
-             } else {
-               console.log( 'soundslice: auth error' );
-             };
-           })
+    .fill( 'password', password )
+    .pressButton( 'Log in', function() {
+      if( browser.text( 'title' ).indexOf( 'Log in' ) == -1 ) {
+        console.log( 'soundslice: auth ok' );
+        self.authenticated = true;
+        self.readyEvent();
+      } else {
+        console.log( 'soundslice: auth error' );
+      };
+    })
   });
 };
 
@@ -52,30 +52,36 @@ soundslice.prototype.uploadNotation = function( options, finishCallback ) {
     console.log( 'soundslice: entering details' );
 
     browser.fill( 'name', options.name )
-           .fill( 'artist', options.artist )
-           .pressButton( 'Save', function() {
+    .fill( 'artist', options.artist )
+    .pressButton( 'Save', function() {
 
-             console.log( 'soundslice: details saved (step 1 of 2)' );
+      console.log( 'soundslice: details saved (step 1 of 2)' );
 
-             var lookupUrl = 'https://www.soundslice.com/manage/?' + querystring.stringify( { q: options.name + ' ' + options.artist } );
-             browser.visit( lookupUrl, function() {
+      var lookupUrl = 'https://www.soundslice.com/manage/?' + querystring.stringify( { q: options.name + ' ' + options.artist } );
+      browser.visit( lookupUrl, function() {
 
-               browser.clickLink( 'Upload notation', function() {
+        browser.clickLink( 'Upload notation', function() {
 
-                 console.log( 'soundslice: starting upload (step 2 of 2)' );
+          console.log( 'soundslice: starting upload (step 2 of 2)' );
 
-                 options.notationId = self.getNotationId( browser.location.href );
+          options.notationId = self.getNotationId( browser.location.href );
 
-                 browser.attach( 'score', 'sample.gp4' );
-                 browser.pressButton( 'Start the upload', function( err ) {
+          browser.attach( 'score', 'sample.gp4' );
+          browser.pressButton( 'Start the upload', function( err ) {
 
-                   console.log( 'soundslice: upload ok (step 2 of 2)' );
-                   finishCallback(options.notationId);
-                 });
-               });
-             });
-           });
+            console.log( 'soundslice: upload ok (step 2 of 2)' );
+            finishCallback(options.notationId);
+          });
+        });
+      });
+    });
   });
+};
+
+soundslice.prototype.search = function( query, callback ) {
+  var results = [];
+  console.log( 'soundslice.search', query );
+  callback( results );
 };
 
 soundslice.prototype.ready = function( f ) {
