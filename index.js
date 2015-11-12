@@ -31,45 +31,58 @@ function soundslice( email, password ) {
   });
 
   this.sync = function( next, callback ) {
-    var results = [],
-    scoresUrl = 'https://www.soundslice.com/manage/?start=',
-    self = this;
 
-    if( next ) {
-      scoresUrl = scoresUrl + next;
-    };
+    var self = this;
 
-    browser.visit( scoresUrl, function() {
+    if( fs.existsSync( 'cache.json') ) {
+      self.scores =  JSON.parse( fs.readFileSync( 'cache.json' ).toString() );
+      callback(self.scores);
+    } else {
+      var results = [],
+      scoresUrl = 'https://www.soundslice.com/manage/?start=';
+      if( next ) {
+        scoresUrl = scoresUrl + next;
+      };
 
-      var $ = cheerio.load( browser.resources[0].response.body ),
-      scoreElements = $( '.score-listing' );
-      console.log( 'scores!', $( '.score-listing' ).length );
+      browser.visit( scoresUrl, function() {
 
-      async.each( scoreElements, function( e, callback ) {
+        var $ = cheerio.load( browser.resources[0].response.body ),
+        scoreElements = $( '.score-listing' );
+        console.log( 'scores!', $( '.score-listing' ).length );
+
+        async.each( scoreElements, function( e, callback ) {
           // console.log( 'score element', $(e).text() );
 
-          var score = {};
+          var score = {},
+          score_id;
+
           score.anchor = $(e).find( '.score-link' );
           score.href = score.anchor.attr( 'href' );
-          score.id = score.href.split( '/' )[2];
           score.title = $( score.anchor.find( 'strong' ) ).text();
+
+          score_id = score.href.split( '/' )[2];
 
           delete( score.anchor );
 
-          console.log( score );
+          console.log( self.scores );
+
+          self.scores[ score_id ] = score;
 
           callback();
-          
-      }, function() {
-        if( $( '.searchnav' ).text().indexOf( 'Next' ) > -1 ) {
-          var nextParam = $( '.searchnav a.pull-right').attr( 'href' ).split( 'start=' )[1];
-          self.sync( nextParam, callback );
-        } else {
-          console.log( 'finish!');
-          callback();
-        };
+
+        }, function() {
+          if( $( '.searchnav' ).text().indexOf( 'Next' ) > -1 ) {
+
+            var nextParam = $( '.searchnav a.pull-right').attr( 'href' ).split( 'start=' )[1];
+            console.log( 'ir al siguiente!', 'nextparam es', nextParam);
+            self.sync( nextParam, callback );
+          } else {
+            fs.writeFileSync( 'cache.json', JSON.stringify( self.scores ) );
+            callback( self.scores );
+          };
+        });
       });
-    });
+    };
   };
 };
 
