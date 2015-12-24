@@ -48,17 +48,15 @@ function soundslice( email, password ) {
 
         var $ = cheerio.load( browser.resources[0].response.body ),
         scoreElements = $( '.score-listing' );
-        console.log( 'scores!', $( '.score-listing' ).length );
 
         async.each( scoreElements, function( e, callback ) {
-          // console.log( 'score element', $(e).text() );
 
           var score = {},
           score_id;
 
-          score.anchor = $(e).find( '.score-link' );
-          score.href = score.anchor.attr( 'href' );
-          score.title = $( score.anchor.find( 'strong' ) ).text();
+          score.anchor = $( $(e).find( '.score-actions li a' )[0] );
+          score.href = score.anchor.attr( 'href' ).replace( '/manage/', '/scores/' );
+          score.title = $(e).find('.score-title').find('strong').text();
 
           score_id = score.href.split( '/' )[2];
 
@@ -136,8 +134,6 @@ soundslice.prototype.uploadNotation = function( options, finishCallback ) {
     });
   });
 };
-
-
 
 soundslice.prototype.ready = function( f ) {
   this.readyEvent = f;
