@@ -62,8 +62,6 @@ function soundslice( email, password ) {
 
           delete( score.anchor );
 
-          console.log( self.scores );
-
           self.scores[ score_id ] = score;
 
           callback();
